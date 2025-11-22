@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViralStory Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: #0f172a; /* Darker Navy for Cinematic Feel */
+            background-image: radial-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px), radial-gradient(rgba(245, 158, 11, 0.05) 1px, #0f172a 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            color: #e2e8f0;
+        }
+        .btn { transition: all 0.2s ease-in-out; }
+        .btn:active:not(:disabled) { transform: scale(0.95); }
+        
+        /* Theme updated to Gold/Amber for "Viral/Premium" feel */
+        .btn-primary { background: linear-gradient(45deg, #f59e0b, #d97706); color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2); }
+        .btn-primary:hover:not(:disabled) { background: linear-gradient(45deg, #d97706, #b45309); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3); }
+        
+        .btn-success { background-color: #16A34A; color: white; }
+        .btn-success:hover:not(:disabled) { background-color: #15803D; }
+        .btn-secondary { background-color: #334155; color: white; }
+        .btn-secondary:hover:not(:disabled) { background-color: #475569; }
+        
+        .btn-ai { background: linear-gradient(45deg, #d97706, #b45309); color: white; }
+        .btn-ai:hover:not(:disabled) { background: linear-gradient(45deg, #b45309, #92400e); }
+        
+        .btn-prompt-canva { background-color: #0ea5e9; color: white; }
+        .btn-prompt-canva:hover:not(:disabled) { background-color: #0284c7; }
+        
+        .btn-copy { background-color: #475569; color: #e2e8f0; font-size: 0.75rem; }
+        .btn-copy:hover:not(:disabled) { background-color: #64748b; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .loader, .inline-loader {
+            border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid #f59e0b;
+            border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;
+        }
+        .inline-loader {
+            width: 20px; height: 20px; border-width: 2px;
+            border-top-color: white; border-left-color: white; border-right-color: white; border-bottom-color: transparent;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tab-btn { border-bottom: 2px solid transparent; color: #94a3b8; }
+        .tab-btn.active { border-bottom-color: #f59e0b; color: #fbbf24; }
+        
+        .prompt-output { 
+            font-family: 'Roboto Mono', monospace;
+            background-color: #1e293b; 
+            border: none;
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #f1f5f9;
+        }
+        .idea-card {
+            background-color: #1e293b;
+            border: 1px solid #475569;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .idea-card:hover {
+            border-color: #f59e0b;
+            transform: translateY(-2px);
+        }
+        .idea-card.selected {
+            border-color: #fbbf24;
+            background-color: #334155;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+        }
+        .custom-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+        .custom-modal-overlay.visible {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .custom-modal-content {
+            background-color: #1e293b;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            max-width: 90%;
+            width: 500px;
+            border: 1px solid #475569;
+            transform: scale(0.95);
+            transition: transform 0.3s ease-in-out;
+        }
+        .custom-modal-overlay.visible .custom-modal-content {
+            transform: scale(1);
+        }
+        .action-dna-tag {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .action-dna-tag.selected {
+            background-color: #d97706;
+            color: white;
+            border-color: #b45309;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+        }
+        .suggestion-list { list-style: none; padding-left: 0; }
+        .suggestion-list li { display: flex; align-items: flex-start; gap: 0.5rem; }
+        .suggestion-list li svg { flex-shrink: 0; margin-top: 4px; }
+        .futuristic-text-glow {
+            text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="password-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="glass-card p-8 rounded-2xl shadow-2xl text-center w-full max-w-sm fade-in">
+            <div class="h-24 w-24 rounded-full mx-auto mb-6 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                <span class="text-3xl font-bold text-white">VS</span>
+            </div>
+            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-2 futuristic-text-glow">ViralStory Access</h2>
+            <p class="text-gray-400 mb-6">Masukkan kode akses strategi.</p>
+            <form id="password-form" class="space-y-4">
+                <div class="relative">
+                    <input type="password" id="password-input" placeholder="Kata Sandi" class="w-full text-center bg-slate-800 border border-amber-500/30 rounded-lg p-3 pr-10 focus:ring-amber-400 focus:border-amber-400 text-white">
+                </div>
+                <button type="submit" class="btn btn-primary font-bold py-3 px-6 rounded-lg w-full">Masuk</button>
+            </form>
+            <p id="password-error" class="text-red-400 text-sm mt-4 hidden">Kata sandi salah.</p>
+        </div>
+    </div>
+
+    <div id="app-wrapper" class="fade-in" style="display: none;">
+        <header class="text-center py-4 px-4 md:px-8 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto flex justify-between items-center glass-card p-3">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-bold text-white">VS</div>
+                    <h1 class="text-xl md:text-2xl font-extrabold tracking-tight">
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400 futuristic-text-glow">ViralStory Generator</span>
+                        <span class="text-xs text-gray-500 ml-1 font-normal">Unsung Heroes Formula</span>
+                    </h1>
+                </div>
+                <div class="flex items-center gap-2 md:gap-3">
+                       <button id="importProjectBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg text-sm">Impor</button>
+                       <button id="exportProjectBtn" class="btn btn-secondary font-semibold py-2 px-4 rounded-lg text-sm">Ekspor</button>
+                       <button id="resetProjectBtn" class="btn btn-primary font-semibold py-2 px-4 rounded-lg text-sm">Baru</button>
+                       <button id="openSettingsBtn" class="btn btn-secondary p-2 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-gear-fill" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1 0 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105 0l.17.31c.698 1.283 2.686.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 0-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105 0l-.17-.31zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
+                       </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex flex-col md:flex-row max-w-7xl mx-auto gap-6 p-4 md:p-6">
+            
+            <aside class="w-full md:w-1/3 lg:w-1/4 space-y-6 flex-shrink-0">
+                
+                <div id="characterSection" class="glass-card">
+                    <div class="p-4">
+                        <h2 class="text-xl font-bold text-amber-400">Aktor & Arketipe</h2>
+                    </div>
+                    <div class="p-4 border-t border-slate-700 space-y-4">
+                        <p class="text-sm text-gray-400">Pilih Arketipe Global untuk cerita "Unsung Heroes" & "Comebacks".</p>
+                        <button id="openAddCharModalBtn" class="btn btn-ai font-semibold py-2 px-4 rounded-lg w-full flex items-center justify-center gap-2">Buat Tokoh Baru</button>
+                        
+                        <div class="pt-4 mt-4 border-t border-slate-700">
+                            <h3 class="text-sm font-semibold text-gray-400 mb-3 text-center">Arketipe Viral Siap Pakai</h3>
+                            <div id="templateCharList" class="space-y-2">
+                                <!-- Templates will be injected here -->
+                            </div>
+                        </div>
+
+                        <div class="pt-4 mt-4 border-t border-slate-700">
+                             <h3 class="text-sm font-semibold text-gray-400 mb-2">Tokoh Terpilih:</h3>
+                             <div id="charListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="directingSection" class="glass-card">
+                    <div class="p-4">
+                        <h2 class="text-xl font-bold text-amber-400">Strategi Visual</h2>
+                    </div>
+                    <div class="p-4 border-t border-slate-700 space-y-4">
+                        <div class="p-3 bg-slate-800/50 border border-amber-500/30 rounded-lg text-center">
+                            <p class="font-bold text-amber-400">Gaya Visual: Cinematic Intimacy 🎥</p>
+                            <p class="text-xs text-gray-400 mt-1">Mengutamakan emosi, pencahayaan moody, dan kedalaman karakter (Chibi Style Enhanced).</p>
+                        </div>
+                        
+                        <div>
+                            <label for="locationSet" class="block text-sm font-semibold text-gray-300 mb-1">Latar (Viral Formula):</label>
+                            <select id="locationSet" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm focus:ring-amber-400 focus:border-amber-400 text-gray-200">
+                                <option value="checkout_lane">Kasir Supermarket (Malam)</option>
+                                <option value="empty_gym">Gym Kosong (Lampu Darurat)</option>
+                                <option value="bus_window">Jendela Bus (Hujan/Sunrise)</option>
+                                <option value="quiet_room">Kamar Hening (Foto Berbingkai)</option>
+                                <option value="park_bench">Bangku Taman (Terabaikan)</option>
+                                <option value="hospital_corridor">Lorong RS (Sepi)</option>
+                                <option value="custom_location">Custom Latar...</option>
+                            </select>
+                            <input type="text" id="customLocationInput" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm mt-2 hidden" placeholder="e.g. Dapur berantakan">
+                        </div>
+                        <div>
+                            <label for="cameraStyleSet" class="block text-sm font-semibold text-gray-300 mb-1">Teknik Kamera:</label>
+                            <select id="cameraStyleSet" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm focus:ring-amber-400 focus:border-amber-400 text-gray-200">
+                                <option value="cinematic_intimacy">Cinematic Intimacy (Extreme Close-up)</option>
+                                <option value="shallow_depth">Shallow Depth of Field (Bokeh)</option>
+                                <option value="handheld_gritty">Handheld (Raw/Gritty)</option>
+                                <option value="rack_focus">Rack Focus (Objek ke Wajah)</option>
+                                <option value="slow_motion_emotional">Slow Motion (Titik Balik)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="narratorVoiceSet" class="block text-sm font-semibold text-gray-300 mb-1">Suara Narator:</label>
+                            <select id="narratorVoiceSet" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm focus:ring-amber-400 focus:border-amber-400 text-gray-200">
+                                <option value="male_us_calm">Male US - Calm, Deep, Empathetic</option>
+                                <option value="female_uk_warm">Female UK - Warm, Gentle, Hopeful</option>
+                                <option value="male_storyteller">Male - Storyteller (Grit & Hope)</option>
+                                <option value="female_whisper">Female - Soft Whisper (Intimate)</option>
+                                <option value="no_narrator">Tanpa Narator (Hanya Musik/Ambient)</option>
+                            </select>
+                        </div>
+                        <!-- Penambahan Opsi Bahasa Narator -->
+                        <div>
+                            <label for="narratorLanguageSet" class="block text-sm font-semibold text-gray-300 mb-1">Bahasa Narator:</label>
+                            <select id="narratorLanguageSet" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm focus:ring-amber-400 focus:border-amber-400 text-gray-200">
+                                <option value="English">English (Global)</option>
+                                <option value="Indonesian">Bahasa Indonesia</option>
+                                <option value="Javanese">Basa Jawa</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="Japanese">Japanese</option>
+                                <option value="Korean">Korean</option>
+                                <option value="No Dialogue">Silent / Text Overlay Only</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <main class="w-full md:w-2/3 lg:w-3/4 glass-card">
+                <div id="tabsContainer" class="border-b border-slate-700 flex">
+                    <button id="tabNaskah" class="tab-btn active font-semibold py-3 px-5">Formula Naskah</button>
+                    <button id="tabStoryboard" class="tab-btn font-semibold py-3 px-5">Papan Cerita (Storyboard)</button>
+                </div>
+
+                <div id="naskahView" class="p-6 space-y-6">
+                    <div>
+                        <label for="projectTitleInput" class="block mb-2 font-semibold text-gray-300">Hook / Judul Viral:</label>
+                        <p class="text-xs text-gray-500 mb-2">Gunakan "Question Hook" atau "Shocking Fact".</p>
+                        <div class="flex items-center gap-2">
+                            <input id="projectTitleInput" type="text" placeholder="Contoh: They Thought He Was Just a Dropout..." class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 focus:ring-amber-400 focus:border-amber-400 text-white">
+                            <button id="generateScriptBtn" class="btn btn-ai font-semibold py-3 px-4 rounded-lg text-sm whitespace-nowrap hidden items-center justify-center gap-2">
+                                <span id="generateScriptBtnText">Buat Struktur Viral</span>
+                                <div id="scriptLoader" class="inline-loader hidden"></div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <label for="scenarioInput" class="block mb-2 font-semibold text-gray-300">Skenario Cerita (Premis):</label>
+                        <p class="text-xs text-gray-500 mb-2">Contoh: "A former addict fixing a broken trophy" atau "A cashier helping a grieving customer."</p>
+                        <textarea id="scenarioInput" rows="6" placeholder="Masukkan premis cerita 'Unsung Heroes' atau 'Quiet Comeback' Anda di sini..." class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 focus:ring-amber-400 focus:border-amber-400 text-white"></textarea>
+                    </div>
+                     <div>
+                        <label for="sceneCount" class="block mb-2 text-sm font-semibold text-gray-300">Jumlah Beat (Scene):</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="sceneCount" min="3" max="10" value="5" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm focus:ring-amber-400 focus:border-amber-400 text-white">
+                            <p class="text-xs text-gray-400">Ideal: 5 scene (Hook, Struggle, Turning Point, Resolution, CTA)</p>
+                        </div>
+                     </div>
+                    <div class="border-t border-slate-700 pt-6 text-center">
+                        <button id="generateBtn" class="btn btn-primary font-bold py-4 px-10 text-xl rounded-xl shadow-lg w-full" disabled>GENERATE VIRAL STORYBOARD</button>
+                    </div>
+                </div>
+
+                <div id="storyboardView" class="p-6 hidden">
+                    <div id="loader" class="mx-auto loader hidden"></div>
+                    <div id="storyboardOutput" class="space-y-6">
+                        <div id="results-placeholder" class="flex flex-col items-center justify-center h-full text-center text-gray-500 py-20">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-film" viewBox="0 0 16 16"><path d="M0 1a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V1zm4 0v6h8V1H4zm8 8H4v6h8V9zM1 1v2h2V1H1zm2 3H1v2h2V4zM1 7v2h2V7H1zm2 3H1v2h2v-2zm-2 3v2h2v-2H1zM15 1h-2v2h2V1zm-2 3v2h2V4h-2zm2 3h-2v2h2V7zm-2 3v2h2v-2h-2zm2 3h-2v2h2v-2z"/></svg>
+                            <p class="text-xl font-semibold mt-4">Storyboard akan muncul di sini</p>
+                            <p>Fokus pada emosi, metafora visual, dan struktur Hook-Story-CTA.</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </main>
+        </div>
+    </div>
+    
+    <!-- Character Modal (Same Structure, Darker Theme) -->
+    <div id="characterModal" class="custom-modal-overlay">
+        <div class="custom-modal-content">
+            <h2 id="characterModalTitle" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-6 text-center flex-shrink-0 futuristic-text-glow">Studio Arketipe</h2>
+            <div id="char-step1" class="flex-grow">
+                 <p class="text-center text-gray-400 mb-4 text-sm">Deskripsikan Arketipe Karakter (misal: "The Survivor")</p>
+                 <textarea id="charIdeaInput" placeholder="Contoh: Seorang pria paruh baya dengan wajah lelah tapi mata penuh harapan. Memakai jaket usang." class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 text-white" rows="3"></textarea>
+                <button id="developCharBtn" class="btn btn-ai font-semibold py-2 px-6 rounded-lg w-full mt-4 flex items-center justify-center gap-2">
+                    <span id="developCharBtnText">✨ Generate Visual ID</span>
+                    <div id="charLoader" class="inline-loader hidden"></div>
+                </button>
+            </div>
+
+            <div id="char-step2" class="hidden flex-grow overflow-y-auto pr-2">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-1">Nama/Peran:</label>
+                            <input type="text" id="charBrandName" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-1">Arketipe:</label>
+                            <input type="text" id="charModelName" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 text-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-1">ID Konsistensi (English):</label>
+                        <input type="text" id="charConsistencyKey" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-1">Deskripsi Visual (Chibi Style):</label>
+                        <textarea id="charDesignLanguage" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 text-white" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="char-step3" class="hidden flex-grow overflow-y-auto pr-2">
+                <div class="mt-4">
+                     <label class="block text-sm font-semibold text-gray-300 mb-2">Emosi/Aksi Khas (Action DNA):</label>
+                     <div id="selectedActionDna" class="flex flex-wrap gap-2 p-2 bg-slate-800/50 rounded-lg border border-amber-500/30 min-h-[40px]">
+                     </div>
+                     <div class="flex gap-2 mt-2">
+                        <input type="text" id="customActionDnaInput" placeholder="Tambah aksi (e.g. Menahan tangis)" class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-2 text-sm text-white">
+                        <button id="addCustomDnaBtn" class="btn btn-secondary text-sm font-semibold py-2 px-3 rounded-lg">Tambah</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex-shrink-0 pt-4 mt-4 border-t border-slate-700">
+                 <div id="char-step-buttons" class="flex justify-between items-center">
+                     <button id="closeCharModalBtn" class="btn btn-secondary font-semibold py-2 px-6 rounded-lg">Tutup</button>
+                     <div id="char-nav-buttons">
+                         <button id="charPrevBtn" class="btn btn-secondary font-semibold py-2 px-6 rounded-lg hidden">Kembali</button>
+                         <button id="charNextBtn" class="btn btn-primary font-semibold py-2 px-6 rounded-lg hidden">Lanjut</button>
+                         <button id="addCharBtn" class="btn btn-success font-semibold py-2 px-6 rounded-lg hidden">Simpan</button>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+        
+    <div id="settingsModal" class="custom-modal-overlay">
+        <div class="custom-modal-content">
+            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-2 text-center">Pengaturan AI</h2>
+            <div>
+                <label for="apiKeyInput" class="block text-sm font-semibold text-gray-300 mb-1">Google AI API Key</label>
+                 <div class="relative">
+                    <input type="password" id="apiKeyInput" placeholder="Masukkan API Key..." class="w-full bg-slate-800 border border-amber-500/30 rounded-lg p-3 pr-10 text-sm text-white">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-700">
+                <button id="clearApiKeyBtn" class="btn btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">Hapus</button>
+                <div>
+                    <button id="closeSettingsModalBtn" class="btn btn-secondary font-semibold py-2 px-6 rounded-lg mr-2">Tutup</button>
+                    <button id="saveApiKeyBtn" class="btn btn-primary font-semibold py-2 px-6 rounded-lg">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationModal" class="fixed bottom-5 right-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 px-5 rounded-lg shadow-2xl hidden fade-in max-w-sm">
+        <p id="notificationText"></p>
+    </div>
+    
+    <input type="file" id="importFileInput" class="hidden" accept=".json">
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- CONFIGURATION ---
+        const CORRECT_PASSWORD = 'SUKSES2025';
+        
+        // --- GLOBAL STATE ---
+        let characters = []; 
+        let storyboardData = []; 
+        let userApiKey = '';
+        let currentCharacterModalStep = 1;
+        let isEditingCharacter = false;
+        let editingCharacterIndex = -1;
+        let tempDevelopedChar = null;
+
+        // --- ARCHETYPES from FORMULA MOTIVATIONALSTORIES.PDF ---
+        const templateCharacters = [
+            {
+                name: "The Survivor (Ex-Addict)", brandName: "The Survivor", modelName: "Pejuang",
+                description: "A person with a weary but determined face, wearing slightly worn casual clothes. High contrast lighting highlights their emotional resilience. Chibi style but with detailed, expressive eyes showing depth.",
+                consistency_key: "chibi_survivor_v1",
+                actionDNA: ["Looking at old photo", "Taking a deep breath", "Walking into light"]
+            },
+            {
+                name: "The Mentor (Teacher/Coach)", brandName: "The Mentor", modelName: "Pembimbing",
+                description: "A warm, older figure with kind eyes and a gentle smile. Dressed modestly (e.g., teacher uniform or coach gear). They emanate patience and hidden strength.",
+                consistency_key: "chibi_mentor_v1",
+                actionDNA: ["Placing hand on shoulder", "Nodding encouragingly", "Staying late"]
+            },
+            {
+                name: "The Cashier (Everyday Hero)", brandName: "The Cashier", modelName: "Pahlawan Sehari-hari",
+                description: "A young worker in a uniform, looking tired but attentive. Their design focuses on the eyes and hands, emphasizing small gestures of kindness.",
+                consistency_key: "chibi_cashier_v1",
+                actionDNA: ["Noticing a tear", "Sliding tissue gently", "Warm smile"]
+            },
+            {
+                name: "The Griever (Processing Loss)", brandName: "The Griever", modelName: "Penyintas Duka",
+                description: "A character dressed in muted colors, often looking down or holding a memento. The design captures the fragility of hope returning slowly.",
+                consistency_key: "chibi_griever_v1",
+                actionDNA: ["Holding a broken object", "Wiping a tear", "Looking at sky"]
+            },
+            {
+                name: "The Dropout (Underdog)", brandName: "The Dropout", modelName: "Underdog",
+                description: "A teenager/young adult with a hoodie or messy hair, looking uncertain but sparking with potential. Often associated with books, tools, or a laptop.",
+                consistency_key: "chibi_dropout_v1",
+                actionDNA: ["Sewing a torn cap", "Staring at resume", "Working in dim light"]
+            }
+        ];
+        
+        const defaultState = { 
+            projectTitle: '',
+            scenario: '', 
+            sceneCount: 5, 
+            locationSet: 'checkout_lane',
+            customLocation: '',
+            cameraStyleSet: 'cinematic_intimacy',
+            narratorVoiceSet: 'male_us_calm',
+            narratorLanguageSet: 'English' // Default state
+        };
+        let state = { ...defaultState };
+
+        // --- DOM ELEMENTS ---
+        const els = {
+            passwordOverlay: document.getElementById('password-overlay'),
+            passwordForm: document.getElementById('password-form'),
+            passwordInput: document.getElementById('password-input'),
+            passwordError: document.getElementById('password-error'),
+            appWrapper: document.getElementById('app-wrapper'),
+            projectTitle: document.getElementById('projectTitleInput'),
+            generateScriptBtn: document.getElementById('generateScriptBtn'),
+            scriptLoader: document.getElementById('scriptLoader'),
+            scenarioInput: document.getElementById('scenarioInput'),
+            sceneCount: document.getElementById('sceneCount'),
+            generateBtn: document.getElementById('generateBtn'),
+            storyboardOutput: document.getElementById('storyboardOutput'),
+            loader: document.getElementById('loader'),
+            resultsPlaceholder: document.getElementById('results-placeholder'),
+            charListContainer: document.getElementById('charListContainer'),
+            templateCharList: document.getElementById('templateCharList'),
+            locationSet: document.getElementById('locationSet'),
+            customLocation: document.getElementById('customLocationInput'),
+            cameraStyle: document.getElementById('cameraStyleSet'),
+            narratorVoice: document.getElementById('narratorVoiceSet'),
+            narratorLanguage: document.getElementById('narratorLanguageSet'), // Added element
+            
+            // Modals & Tabs
+            charModal: document.getElementById('characterModal'),
+            settingsModal: document.getElementById('settingsModal'),
+            notificationModal: document.getElementById('notificationModal'),
+            tabNaskah: document.getElementById('tabNaskah'),
+            tabStoryboard: document.getElementById('tabStoryboard'),
+            naskahView: document.getElementById('naskahView'),
+            storyboardView: document.getElementById('storyboardView'),
+
+            // Character Form
+            charIdea: document.getElementById('charIdeaInput'),
+            charBrand: document.getElementById('charBrandName'),
+            charModel: document.getElementById('charModelName'),
+            charKey: document.getElementById('charConsistencyKey'),
+            charDesign: document.getElementById('charDesignLanguage'),
+            selectedActionDna: document.getElementById('selectedActionDna'),
+            customActionDna: document.getElementById('customActionDnaInput'),
+            
+            // Buttons
+            openAddCharModalBtn: document.getElementById('openAddCharModalBtn'),
+            addCharBtn: document.getElementById('addCharBtn'),
+            developCharBtn: document.getElementById('developCharBtn'),
+            charNextBtn: document.getElementById('charNextBtn'),
+            charPrevBtn: document.getElementById('charPrevBtn'),
+            addCustomDnaBtn: document.getElementById('addCustomDnaBtn'),
+            saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
+            apiKeyInput: document.getElementById('apiKeyInput'),
+            
+            // Project Management
+            importProjectBtn: document.getElementById('importProjectBtn'),
+            exportProjectBtn: document.getElementById('exportProjectBtn'),
+            resetProjectBtn: document.getElementById('resetProjectBtn'),
+            importFileInput: document.getElementById('importFileInput')
+        };
+
+        // --- AUTHENTICATION ---
+        if (sessionStorage.getItem('isVerified_ViralStory') === 'true') {
+            els.passwordOverlay.style.display = 'none';
+            els.appWrapper.style.display = 'block';
+        } else {
+            els.passwordOverlay.style.display = 'flex';
+        }
+
+        els.passwordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (els.passwordInput.value === CORRECT_PASSWORD) {
+                sessionStorage.setItem('isVerified_ViralStory', 'true');
+                els.passwordOverlay.style.display = 'none';
+                els.appWrapper.style.display = 'block';
+            } else {
+                els.passwordError.classList.remove('hidden');
+            }
+        });
+
+        // --- AI API HANDLER ---
+        const callGeminiAPI = async (prompt, schema = null) => {
+            const apiKey = userApiKey || ""; // Use input key or handle empty
+            const model = 'gemini-2.5-flash-preview-05-20'; // Or flash-latest
+            let apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            
+            let payload = { 
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: schema ? { responseMimeType: "application/json", responseSchema: schema } : {}
+            };
+
+            try {
+                const response = await fetch(apiUrl, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
+                });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const result = await response.json();
+                return result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            } catch (error) {
+                throw error;
+            }
+        };
+
+        // --- LOGIC: GENERATE SCRIPT STRUCTURE ---
+        const handleGenerateScript = async () => {
+            const hook = els.projectTitle.value.trim();
+            if (!hook) { showNotification("Masukkan Hook/Judul terlebih dahulu."); return; }
+            
+            els.generateScriptBtn.disabled = true;
+            els.scriptLoader.classList.remove('hidden');
+            
+            // FORMULA FROM PDF: HOOK -> INSIGHT -> BEATS -> CTA
+            const prompt = `Act as a Viral Content Strategist for short-form video (TikTok/Reels).
+            Based on the Hook: "${hook}", create a structured "Unsung Heroes / Quiet Comeback" story concept.
+            
+            Structure Required:
+            1. CORE INSIGHT (The moral, e.g., "Resilience starts with a whisper"):
+            2. STORY BEATS (Brief description of flow):
+               - Beat 1: The Struggle (Visual of hardship/isolation)
+               - Beat 2: The Turning Point (Small act of kindness or decision)
+               - Beat 3: The Result (Quiet victory, not loud)
+            3. CTA (Community building, e.g., "Tag your hero"):
+
+            Keep it concise and emotional.`;
+
+            try {
+                const result = await callGeminiAPI(prompt);
+                els.scenarioInput.value = result;
+                state.scenario = result;
+                updateUIState();
+                showNotification("Struktur Naskah Viral Dibuat!");
+            } catch (error) {
+                showNotification("Gagal membuat naskah: " + error.message);
+            } finally {
+                els.generateScriptBtn.disabled = false;
+                els.scriptLoader.classList.add('hidden');
+            }
+        };
+
+        // --- LOGIC: GENERATE STORYBOARD (THE CORE) ---
+        const handleGenerateStoryboard = async () => {
+            els.loader.classList.remove('hidden');
+            els.resultsPlaceholder.classList.add('hidden');
+            els.storyboardOutput.innerHTML = '';
+            switchTab('storyboard');
+
+            const charContext = characters.length > 0 ? 
+                JSON.stringify(characters.map(c => ({ name: c.name, archeptype: c.modelName, description: c.description, visual_style: "Chibi with Cinematic Detail" }))) : 
+                "Generic emotional Chibi characters.";
+            
+            const location = els.locationSet.value === 'custom_location' ? els.customLocation.value : els.locationSet.options[els.locationSet.selectedIndex].text;
+            const camera = els.cameraStyle.options[els.cameraStyle.selectedIndex].text;
+            const narrator = els.narratorVoice.value;
+            const language = els.narratorLanguage.value; // Capture Language
+
+            // SYSTEM PROMPT BASED ON PDF FORMULA
+            const prompt = `You are a Director for Viral Emotional Animation. Convert this script into a ${state.sceneCount}-segment storyboard JSON.
+            
+            **THE FORMULA (Unsung Heroes & Quiet Comebacks):**
+            - **Visual Style:** "Cinematic Intimacy". Use Chibi proportions but with realistic, moody lighting, shallow depth of field (bokeh), and focus on small details (hands, eyes, objects).
+            - **Structure:**
+              - Scene 1: THE HOOK (Stop the scroll. Extreme close-up or shocking contrast).
+              - Middle Scenes: THE STRUGGLE & TURNING POINT (Slow motion, emotional gaze, interaction).
+              - Last Scene: THE RESOLUTION & CTA (Warm lighting, look at camera).
+            
+            **INPUTS:**
+            - Context: ${state.scenario}
+            - Characters: ${charContext}
+            - Location: ${location}
+            - Camera: ${camera}
+            - Narrator Voice: ${narrator}
+            - Narration Language: ${language}
+
+            **OUTPUT JSON:**
+            Generate 'storyboard' array. Each object:
+            - 'scene_title': Short punchy title.
+            - 'scene_summary': Detailed visual description focusing on emotion and lighting. Mention "Cinematic Chibi" style.
+            - 'cinematography': { shot_type, focus_point, lighting_mood }.
+            - 'sound_design': { narration_script (Very short, deep, in ${language}), sfx (subtle), music_mood }.
+            `;
+
+            const schema = {
+                type: "OBJECT", properties: {
+                    storyboard: { 
+                        type: "ARRAY", 
+                        items: { 
+                            type: "OBJECT", 
+                            properties: {
+                                scene_number: { type: "NUMBER" },
+                                scene_title: { type: "STRING" },
+                                scene_summary: { type: "STRING" },
+                                cinematography: { type: "OBJECT", properties: { shot_type: { type: "STRING" }, focus_point: { type: "STRING" }, lighting_mood: { type: "STRING" }}},
+                                sound_design: { type: "OBJECT", properties: { narration_script: { type: "STRING" }, sfx: { type: "ARRAY", items: { type: "STRING" }}, music_mood: { type: "STRING" }}}
+                            }
+                        }
+                    }
+                }
+            };
+
+            try {
+                const resultText = await callGeminiAPI(prompt, schema);
+                const data = JSON.parse(resultText);
+                storyboardData = data.storyboard;
+                renderStoryboard(storyboardData);
+            } catch (error) {
+                console.error(error);
+                els.storyboardOutput.innerHTML = `<p class="text-red-400 text-center">Error: ${error.message}</p>`;
+            } finally {
+                els.loader.classList.add('hidden');
+            }
+        };
+
+        // --- RENDERING ---
+        const renderStoryboard = (data) => {
+            if (!data || !Array.isArray(data)) return; // Safety check
+            
+            data.forEach((scene, index) => {
+                if (!scene) return; // Skip invalid scenes
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800 border border-amber-500/20 p-5 rounded-xl shadow-lg fade-in mb-6';
+                card.dataset.index = index;
+                
+                // Safe access for nested objects
+                const cine = scene.cinematography || {};
+                const sound = scene.sound_design || {};
+
+                const narration = sound.narration_script ? `<p class="text-amber-200 italic">"${sound.narration_script}"</p>` : '<span class="text-gray-500">No Narration</span>';
+                const sfx = sound.sfx?.join(', ') || 'None';
+                
+                const lighting = cine.lighting_mood || 'Standard Lighting';
+                const shot = cine.shot_type || 'Standard Shot';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Beat ${scene.scene_number || index + 1}</span>
+                            <h3 class="text-lg font-bold text-white mt-1">${scene.scene_title || 'Untitled Scene'}</h3>
+                        </div>
+                        <div class="text-right text-xs text-gray-400">
+                            <p>${lighting}</p>
+                            <p>${shot}</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mb-4 border-l-4 border-amber-500 pl-3">${scene.scene_summary || 'No summary available.'}</p>
+                    
+                    <div class="bg-slate-900 p-3 rounded-lg mb-4">
+                        <div class="flex gap-2 items-center mb-1">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Voiceover</span>
+                        </div>
+                        ${narration}
+                    </div>
+
+                    <div class="flex gap-2 flex-wrap">
+                        <button class="btn btn-prompt-canva text-xs py-2 px-3 rounded" onclick="handleGenPrompt(this, 'canva')">Canva Prompt</button>
+                        <button class="btn btn-secondary text-xs py-2 px-3 rounded" onclick="handleGenPrompt(this, 'veo')">Veo/Sora Prompt (Realistic)</button>
+                    </div>
+                    <div class="prompt-container mt-3 hidden"></div>
+                `;
+                els.storyboardOutput.appendChild(card);
+            });
+        };
+
+        const renderTemplateCharacters = () => {
+            els.templateCharList.innerHTML = '';
+            templateCharacters.forEach((char, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-slate-800 p-3 rounded border border-slate-700 hover:border-amber-500/50 transition-colors cursor-pointer';
+                div.innerHTML = `<div><p class="font-bold text-amber-400 text-sm">${char.name}</p><p class="text-xs text-gray-400">${char.modelName}</p></div><button class="btn btn-secondary text-xs px-2 py-1 rounded">+</button>`;
+                div.onclick = () => {
+                    characters.push({...char});
+                    renderCharList();
+                    showNotification(`Arketipe "${char.name}" ditambahkan.`);
+                };
+                els.templateCharList.appendChild(div);
+            });
+        };
+
+        const renderCharList = () => {
+            els.charListContainer.innerHTML = '';
+            characters.forEach((char, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-slate-800 p-2 rounded mb-2';
+                div.innerHTML = `<span class="text-sm font-bold text-gray-200">${char.name}</span><button class="text-red-400 text-xs" onclick="removeChar(${index})">Hapus</button>`;
+                els.charListContainer.appendChild(div);
+            });
+        };
+        window.removeChar = (index) => { characters.splice(index, 1); renderCharList(); };
+
+        // --- PROMPT GENERATION (BUTTONS) ---
+        window.handleGenPrompt = async (btn, type) => {
+            const card = btn.closest('[data-index]');
+            if (!card) return;
+            const sceneIndex = parseInt(card.dataset.index);
+            const scene = storyboardData[sceneIndex];
+            
+            if (!scene) return;
+
+            const container = card.querySelector('.prompt-container');
+            container.classList.remove('hidden');
+            container.innerHTML = '<div class="inline-loader"></div>';
+            
+            // Safe access
+            const cine = scene.cinematography || {};
+            const sound = scene.sound_design || {};
+
+            // PROMPT LOGIC ENFORCING "CINEMATIC INTIMACY"
+            let genPrompt = "";
+            if (type === 'canva') {
+                genPrompt = `Create a Canva AI Image Prompt (Indonesian).
+                Scene: "${scene.scene_summary || ''}"
+                Style: Chibi 3D, Cinematic Lighting, Emotive, Moody, Bokeh Background, 8k resolution.
+                Focus: ${cine.focus_point || 'Character face'}.
+                Mood: ${cine.lighting_mood || 'Dramatic'}.`;
+            } else {
+                const voiceStyle = els.narratorVoice.options[els.narratorVoice.selectedIndex].text;
+                const lang = els.narratorLanguage.value;
+                const script = sound.narration_script || "No narration";
+
+                genPrompt = `Create a Video Generation Prompt (English) for Veo/Sora.
+                Subject: Chibi-style character, realistic textures. Action: ${scene.scene_summary || ''}.
+                Cinematography: ${cine.shot_type || 'Cinematic shot'}, ${cine.lighting_mood || 'Dramatic lighting'}, shallow depth of field, film grain, hyper-realistic.
+                Atmosphere: Emotional, intimate, "Unsung Hero" vibe.
+                Negative: Cartoonish, flat, 2d, bright cheery colors, low resolution.
+                
+                INSTRUCTION: Narration style is ${voiceStyle}.
+                NARRATION (${lang}): "${script}"`;
+            }
+
+            try {
+                const text = await callGeminiAPI(genPrompt);
+                // Added Copy Button Logic
+                const uniqueId = 'prompt-' + Math.random().toString(36).substr(2, 9);
+                container.innerHTML = `
+                    <div class="relative bg-slate-900 rounded-lg p-1 border border-slate-700">
+                        <button class="absolute top-2 right-2 btn btn-copy text-xs py-1 px-2 rounded z-10" onclick="copyText('${uniqueId}', this)">
+                            Salin
+                        </button>
+                        <pre id="${uniqueId}" class="prompt-output p-3 rounded text-xs overflow-x-auto">${text}</pre>
+                    </div>
+                `;
+            } catch (e) {
+                container.innerHTML = `<p class="text-red-400 text-xs">Error generating prompt.</p>`;
+            }
+        };
+        
+        // Copy Function Helper
+        window.copyText = (id, btn) => {
+            const text = document.getElementById(id).innerText;
+            
+            // Create temporary textarea
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // Ensure it's not visible but part of DOM
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if(successful) {
+                    const originalText = btn.innerText;
+                    btn.innerText = "Tersalin!";
+                    setTimeout(() => btn.innerText = originalText, 2000);
+                } else {
+                    console.error('Fallback copy failed.');
+                    prompt("Salin manual: Ctrl+C, Enter", text);
+                }
+            } catch (err) {
+                console.error('Unable to copy', err);
+            }
+            
+            document.body.removeChild(textArea);
+        };
+
+        // --- EXPORT / IMPORT / RESET HANDLERS ---
+        
+        const handleExportToJson = () => {
+            if (!state.projectTitle && characters.length === 0 && storyboardData.length === 0) {
+                showNotification("Belum ada data proyek untuk diekspor.");
+                return;
+            }
+            
+            // NEW FILENAME LOGIC: viralstory_judulviral.json
+            let rawTitle = state.projectTitle.trim();
+            if (!rawTitle) rawTitle = "untitled_project";
+            
+            // Sanitize title: lowercase, replace non-alphanumeric with underscore
+            const sanitizedTitle = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+            const filename = `viralstory_${sanitizedTitle}.json`;
+
+            const projectData = {
+                version: "ViralStory-1.0",
+                timestamp: new Date().toISOString(),
+                state: {
+                    ...state,
+                    projectTitle: els.projectTitle.value, // Ensure current inputs are captured
+                    scenario: els.scenarioInput.value,
+                    sceneCount: els.sceneCount.value,
+                },
+                characters: characters,
+                storyboardData: storyboardData,
+            };
+            const jsonString = JSON.stringify(projectData, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            saveAs(blob, filename);
+            showNotification(`Proyek diekspor: ${filename}`);
+        };
+
+        const handleResetProject = () => {
+            if(confirm("Mulai proyek baru? Semua data yang belum disimpan akan hilang.")) {
+                // Reset Variables
+                state = { ...defaultState };
+                characters = [];
+                storyboardData = [];
+                
+                // Reset UI Inputs
+                els.projectTitle.value = '';
+                els.scenarioInput.value = '';
+                els.sceneCount.value = 5;
+                els.locationSet.value = 'checkout_lane';
+                els.customLocation.classList.add('hidden');
+                els.customLocation.value = '';
+                els.cameraStyle.value = 'cinematic_intimacy';
+                els.narratorVoice.value = 'male_us_calm';
+                els.narratorLanguage.value = 'English';
+
+                // Reset Views
+                renderCharList();
+                els.storyboardOutput.innerHTML = '';
+                els.resultsPlaceholder.classList.remove('hidden');
+                switchTab('naskah');
+                updateUIState();
+                showNotification("Proyek baru dimulai.");
+            }
+        };
+
+        // --- EVENT LISTENERS ---
+        els.tabNaskah.onclick = () => switchTab('naskah');
+        els.tabStoryboard.onclick = () => switchTab('storyboard');
+        
+        const switchTab = (tab) => {
+            if (tab === 'naskah') {
+                els.tabNaskah.classList.add('active'); els.tabStoryboard.classList.remove('active');
+                els.naskahView.classList.remove('hidden'); els.storyboardView.classList.add('hidden');
+            } else {
+                els.tabNaskah.classList.remove('active'); els.tabStoryboard.classList.add('active');
+                els.naskahView.classList.add('hidden'); els.storyboardView.classList.remove('hidden');
+            }
+        };
+
+        els.generateScriptBtn.onclick = handleGenerateScript;
+        els.generateBtn.onclick = handleGenerateStoryboard;
+        els.projectTitle.addEventListener('input', (e) => els.generateScriptBtn.classList.toggle('hidden', !e.target.value));
+        els.scenarioInput.addEventListener('input', updateUIState);
+        
+        if (els.openAddCharModalBtn) {
+            els.openAddCharModalBtn.onclick = () => { els.charModal.classList.add('visible'); };
+        }
+        
+        document.getElementById('closeCharModalBtn').onclick = () => els.charModal.classList.remove('visible');
+        els.developCharBtn.onclick = async () => {
+            const idea = els.charIdea.value;
+            els.developCharBtn.disabled = true;
+            const prompt = `Create a Chibi Character Profile (JSON) based on archetype: "${idea}".
+            Focus on "Quiet Hero" traits (tired eyes, worn clothes, warm smile).
+            JSON keys: brand_name, model_name, consistency_key, design_language.`;
+            try {
+                const res = await callGeminiAPI(prompt, { type: "OBJECT", properties: { brand_name: {type:"STRING"}, model_name: {type:"STRING"}, consistency_key: {type:"STRING"}, design_language: {type:"STRING"}}});
+                const obj = JSON.parse(res);
+                els.charBrand.value = obj.brand_name; els.charModel.value = obj.model_name;
+                els.charKey.value = obj.consistency_key; els.charDesign.value = obj.design_language;
+                document.getElementById('char-step1').classList.add('hidden');
+                document.getElementById('char-step2').classList.remove('hidden');
+                document.getElementById('char-nav-buttons').querySelectorAll('button').forEach(b => b.classList.remove('hidden'));
+            } catch(e) { showNotification("Error generating char."); }
+            els.developCharBtn.disabled = false;
+        };
+        
+        if (els.addCustomDnaBtn) {
+            els.addCustomDnaBtn.onclick = () => {
+                const val = els.customActionDna.value.trim();
+                if (!val) return;
+                const tag = document.createElement('span');
+                tag.className = 'bg-amber-600 text-white text-xs px-2 py-1 rounded mr-1 mb-1 inline-block';
+                tag.textContent = val;
+                els.selectedActionDna.appendChild(tag);
+                els.customActionDna.value = '';
+            };
+        }
+        
+        els.addCharBtn.onclick = () => {
+            characters.push({
+                name: els.charBrand.value,
+                modelName: els.charModel.value,
+                description: els.charDesign.value,
+                actionDNA: []
+            });
+            renderCharList();
+            els.charModal.classList.remove('visible');
+        };
+
+        els.saveApiKeyBtn.onclick = () => {
+            userApiKey = els.apiKeyInput.value;
+            localStorage.setItem('viralStoryKey', userApiKey);
+            els.settingsModal.classList.remove('visible');
+        };
+
+        document.getElementById('openSettingsBtn').onclick = () => els.settingsModal.classList.add('visible');
+        document.getElementById('closeSettingsModalBtn').onclick = () => els.settingsModal.classList.remove('visible');
+        
+        els.narratorLanguage.addEventListener('change', (e) => {
+            state.narratorLanguageSet = e.target.value;
+        });
+
+        // Attach Export/Import/Reset Handlers
+        els.exportProjectBtn.onclick = handleExportToJson;
+        els.resetProjectBtn.onclick = handleResetProject;
+        
+        els.importProjectBtn.onclick = () => {
+            showNotification("Pilih file JSON proyek ViralStory...");
+            els.importFileInput.click();
+        };
+        
+        els.importFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.state && data.storyboardData) {
+                        // Restore State
+                        state = data.state;
+                        characters = data.characters || [];
+                        storyboardData = data.storyboardData || [];
+                        
+                        // Restore UI Inputs
+                        els.projectTitle.value = state.projectTitle || '';
+                        els.scenarioInput.value = state.scenario || '';
+                        els.sceneCount.value = state.sceneCount || 5;
+                        els.locationSet.value = state.locationSet || 'checkout_lane';
+                        if(state.locationSet === 'custom_location') {
+                            els.customLocation.classList.remove('hidden');
+                            els.customLocation.value = state.customLocation || ''; // Assuming stored in state if needed, simple fallback
+                        }
+                        els.cameraStyle.value = state.cameraStyleSet || 'cinematic_intimacy';
+                        els.narratorVoice.value = state.narratorVoiceSet || 'male_us_calm';
+                        els.narratorLanguage.value = state.narratorLanguageSet || 'English';
+
+                        // Render Data
+                        renderCharList();
+                        els.resultsPlaceholder.classList.add('hidden');
+                        els.storyboardOutput.innerHTML = ''; // Clear before render
+                        renderStoryboard(storyboardData);
+                        
+                        updateUIState();
+                        showNotification("Proyek berhasil dimuat!");
+                    } else {
+                        showNotification("Format file JSON tidak valid.");
+                    }
+                } catch(err) {
+                    showNotification("Gagal membaca file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            els.importFileInput.value = ''; // Reset input
+        });
+
+        function updateUIState() {
+            els.generateBtn.disabled = !els.scenarioInput.value.trim();
+        }
+
+        function showNotification(msg) {
+            const modal = document.getElementById('notificationModal');
+            document.getElementById('notificationText').textContent = msg;
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('hidden'), 3000);
+        }
+
+        // Init
+        userApiKey = localStorage.getItem('viralStoryKey') || '';
+        els.apiKeyInput.value = userApiKey;
+        renderTemplateCharacters();
+    });
+    </script>
+</body>
+</html>
