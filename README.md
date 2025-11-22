@@ -1,6 +1,6 @@
 Cara Menggunakan:
 
-1. Klik Link https://kenug13.github.io/WisataKreator/
+1. Klik Link <a href="https://kenug13.github.io/WisataKreator/" target="_blank"> App Wisata Kreator Gen</a>
 2. Masukkan Kata Sandi
 3. Klik ikon Gerigi (Pengaturan) di pojok kanan atas dan masukkan Google AI Studio API Key Anda agar fitur generator otomatis berfungsi.
 4. Pilih Host/Pemandu Tur yang di inginkan.
